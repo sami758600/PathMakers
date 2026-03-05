@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Prototype Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="bg-grid">
+    <div class="orb orb-a"></div>
+    <div class="orb orb-b"></div>
+
+    <main class="shell">
+        <header class="hero compact">
+            <p class="eyebrow">Pipeline Result</p>
+            <h1>{{ profile.name }}</h1>
+            <p>
+                Selected: {{ result.selected_grant.grant_id }} - {{ result.selected_grant.title }}
+            </p>
+            <p class="status-chip status-{{ result.status | lower }}">{{ result.status.replace('_', ' ') }}</p>
+        </header>
+
+        <section class="panel">
+            <h2>Discovery Ranking</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Grant</th>
+                            <th>Score</th>
+                            <th>Deadline</th>
+                            <th>Reasons</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in result.ranked_results %}
+                        <tr {% if item.grant.grant_id == result.selected_grant.grant_id %}class="selected"{% endif %}>
+                            <td>{{ item.grant.grant_id }} - {{ item.grant.title }}</td>
+                            <td>{{ '%.2f'|format(item.score) }}</td>
+                            <td>{{ item.grant.deadline.isoformat() }}</td>
+                            <td>{{ item.reasons | join(', ') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel grid-2">
+            <article>
+                <h2>Auto-Filled Fields</h2>
+                <dl class="kv-list">
+                    {% for key, value in result.fields.items() %}
+                    <div>
+                        <dt>{{ key }}</dt>
+                        <dd>{{ value }}</dd>
+                    </div>
+                    {% endfor %}
+                </dl>
+            </article>
+
+            <article>
+                <h2>Compliance</h2>
+                <ul class="issues">
+                    {% if result.compliance_issues %}
+                        {% for issue in result.compliance_issues %}
+                        <li class="issue issue-{{ issue.severity | lower }}">
+                            <strong>{{ issue.severity }}</strong>
+                            <span>{{ issue.message }}</span>
+                        </li>
+                        {% endfor %}
+                    {% else %}
+                        <li class="issue issue-pass"><strong>PASS</strong><span>No compliance issues found.</span></li>
+                    {% endif %}
+                </ul>
+            </article>
+        </section>
+
+        <section class="panel">
+            <h2>Narrative Output</h2>
+            {% for key, value in result.narratives.items() %}
+            <article class="narrative-card">
+                <h3>{{ key.replace('_', ' ')|title }}</h3>
+                <p>{{ value }}</p>
+            </article>
+            {% endfor %}
+        </section>
+
+        <section class="actions-row">
+            <a class="btn-secondary" href="{{ url_for('index') }}">Run Another Scenario</a>
+        </section>
+    </main>
+</body>
+</html>

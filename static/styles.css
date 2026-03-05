@@ -1,0 +1,359 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap');
+
+:root {
+    --bg: #f2efe8;
+    --ink: #14232d;
+    --ink-soft: #3b515f;
+    --panel: rgba(255, 255, 255, 0.88);
+    --line: rgba(20, 35, 45, 0.14);
+    --teal: #0e6f66;
+    --orange: #d65f2d;
+    --red: #b1362d;
+    --green: #1f7a3e;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--ink);
+    font-family: 'Space Grotesk', sans-serif;
+    background:
+        radial-gradient(circle at 8% 12%, #ffd8bd 0, rgba(255, 216, 189, 0) 38%),
+        radial-gradient(circle at 90% 8%, #c8ebe6 0, rgba(200, 235, 230, 0) 40%),
+        linear-gradient(160deg, #f6f3ed 0%, #ebf0ec 100%);
+}
+
+.bg-grid::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(var(--line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 36px 36px;
+    opacity: 0.25;
+}
+
+.orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(24px);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.orb-a {
+    width: 260px;
+    height: 260px;
+    background: rgba(214, 95, 45, 0.28);
+    top: -70px;
+    right: 10%;
+}
+
+.orb-b {
+    width: 300px;
+    height: 300px;
+    background: rgba(14, 111, 102, 0.2);
+    left: -80px;
+    bottom: 5%;
+}
+
+.shell {
+    width: min(1120px, calc(100% - 2.5rem));
+    margin: 1.5rem auto 3rem;
+    display: grid;
+    gap: 1rem;
+}
+
+.hero {
+    background: rgba(20, 35, 45, 0.95);
+    color: #f7f8f5;
+    padding: 1.4rem 1.6rem;
+    border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(14, 23, 32, 0.22);
+    animation: rise 0.45s ease-out;
+}
+
+.hero h1 {
+    margin: 0.2rem 0 0.5rem;
+    font-size: clamp(1.4rem, 1.1rem + 1.4vw, 2.15rem);
+    line-height: 1.1;
+}
+
+.hero p {
+    margin: 0.3rem 0;
+    color: rgba(247, 248, 245, 0.9);
+}
+
+.eyebrow {
+    margin: 0;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.82;
+    font-size: 0.8rem;
+}
+
+.panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 1.05rem 1.2rem;
+    backdrop-filter: blur(8px);
+    animation: rise 0.45s ease-out;
+}
+
+.panel-soft {
+    background: rgba(14, 111, 102, 0.08);
+}
+
+.panel h2,
+.panel h3 {
+    margin-top: 0.1rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem;
+}
+
+.form-field {
+    display: grid;
+    gap: 0.4rem;
+}
+
+.form-field span {
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+}
+
+.full {
+    grid-column: 1 / -1;
+}
+
+input,
+textarea,
+select {
+    width: 100%;
+    border: 1px solid rgba(20, 35, 45, 0.24);
+    border-radius: 12px;
+    padding: 0.65rem 0.75rem;
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--ink);
+    font: inherit;
+}
+
+textarea {
+    resize: vertical;
+}
+
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.checkbox-row input {
+    width: auto;
+}
+
+.btn-primary,
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    border: 0;
+    border-radius: 999px;
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.9rem;
+    padding: 0.68rem 1.15rem;
+}
+
+.btn-primary {
+    color: #ffffff;
+    background: linear-gradient(90deg, var(--teal), #0b887c);
+}
+
+.btn-primary:hover {
+    filter: brightness(1.06);
+}
+
+.btn-secondary {
+    color: var(--ink);
+    border: 1px solid rgba(20, 35, 45, 0.3);
+    background: rgba(255, 255, 255, 0.88);
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.actions-row {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 760px;
+}
+
+th,
+td {
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+    padding: 0.65rem 0.5rem;
+    font-size: 0.92rem;
+}
+
+th {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+}
+
+tr.selected {
+    background: rgba(14, 111, 102, 0.12);
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.kv-list {
+    margin: 0;
+    display: grid;
+    gap: 0.75rem;
+}
+
+.kv-list div {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 0.65rem;
+    background: rgba(255, 255, 255, 0.75);
+}
+
+.kv-list dt {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+}
+
+.kv-list dd {
+    margin: 0.35rem 0 0;
+}
+
+.issues {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.6rem;
+}
+
+.issue {
+    border-radius: 12px;
+    padding: 0.65rem 0.8rem;
+    border: 1px solid transparent;
+    display: grid;
+    gap: 0.2rem;
+}
+
+.issue-blocker {
+    border-color: rgba(177, 54, 45, 0.38);
+    background: rgba(177, 54, 45, 0.1);
+}
+
+.issue-warning {
+    border-color: rgba(214, 95, 45, 0.35);
+    background: rgba(214, 95, 45, 0.1);
+}
+
+.issue-pass {
+    border-color: rgba(31, 122, 62, 0.35);
+    background: rgba(31, 122, 62, 0.1);
+}
+
+.narrative-card {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 0.85rem 0.95rem;
+    margin-bottom: 0.85rem;
+    background: rgba(255, 255, 255, 0.78);
+}
+
+.narrative-card h3 {
+    margin: 0 0 0.35rem;
+}
+
+.status-chip {
+    display: inline-block;
+    margin-top: 0.45rem;
+    padding: 0.35rem 0.72rem;
+    border-radius: 999px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+}
+
+.status-submitted {
+    background: rgba(31, 122, 62, 0.2);
+    color: #0f4e26;
+}
+
+.status-blocked {
+    background: rgba(177, 54, 45, 0.2);
+    color: #6e211c;
+}
+
+.status-draft_review {
+    background: rgba(214, 95, 45, 0.2);
+    color: #6f361b;
+}
+
+@keyframes rise {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 900px) {
+    .shell {
+        width: min(100%, calc(100% - 1.2rem));
+        margin-top: 0.9rem;
+    }
+
+    .form-grid,
+    .grid-2 {
+        grid-template-columns: 1fr;
+    }
+
+    .actions {
+        justify-content: stretch;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+    }
+}

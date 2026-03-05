@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GrantFlow — Full Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700;900&family=DM+Sans:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --surface: #fffdf8;
+    --border: #e0d8cc;
+    --text: #1a1208;
+    --muted: #8a7d6a;
+    --accent: #2d6a4f;
+    --accent2: #e76f51;
+    --accent3: #457b9d;
+    --gold: #c9963a;
+    --pass: #2d6a4f;
+    --warn: #c9963a;
+    --fail: #e63946;
+    --radius: 14px;
+    --shadow: 0 2px 20px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); font-family: 'DM Sans', sans-serif; color: var(--text); min-height: 100vh; }
+  
+  /* LAYOUT */
+  .shell { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: 260px; min-height: 100vh; background: var(--text);
+    display: flex; flex-direction: column; padding: 28px 0; position: fixed; top: 0; left: 0; bottom: 0;
+  }
+  .sidebar-logo { padding: 0 24px 32px; border-bottom: 1px solid #2a2010; margin-bottom: 24px; }
+  .logo-mark { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .logo-text { font-family: 'Fraunces', serif; font-size: 20px; color: #f5f0e8; font-weight: 700; }
+  .logo-sub { font-size: 11px; color: #5a4e3a; margin-top: 2px; letter-spacing: 1.5px; text-transform: uppercase; }
+  
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 24px; cursor: pointer;
+    transition: all .2s; color: #7a6a52; font-size: 14px; font-weight: 500;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { color: #f5f0e8; background: #1a1208; }
+  .nav-item.active { color: #f5f0e8; border-left-color: var(--accent); background: #1a1208; }
+  .nav-item.done { color: var(--accent); }
+  .nav-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; background: #1a1208; flex-shrink: 0; }
+  .nav-item.active .nav-icon { background: var(--accent); }
+  .nav-item.done .nav-icon { background: #0d2218; }
+  .nav-step { font-size: 10px; color: #3a3020; margin-left: auto; font-weight: 600; letter-spacing: 1px; }
+  .nav-item.active .nav-step { color: var(--accent); }
+
+  .main { margin-left: 260px; flex: 1; padding: 48px 52px; max-width: calc(100% - 260px); }
+  
+  /* PANELS */
+  .panel { display: none; animation: fadeUp .35s ease; }
+  .panel.active { display: block; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+  
+  .page-header { margin-bottom: 36px; }
+  .page-tag { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .page-title { font-family: 'Fraunces', serif; font-size: 38px; color: var(--text); line-height: 1.1; font-weight: 700; }
+  .page-sub { font-size: 15px; color: var(--muted); margin-top: 8px; line-height: 1.6; }
+
+  /* CARDS */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow); }
+  .card + .card { margin-top: 20px; }
+
+  /* FORM */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .form-group { display: flex; flex-direction: column; gap: 7px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .form-input, .form-textarea, .form-select {
+    background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px;
+    color: var(--text); padding: 11px 15px; font-size: 14px; font-family: 'DM Sans', sans-serif;
+    outline: none; transition: border-color .2s, box-shadow .2s; width: 100%;
+  }
+  .form-input:focus, .form-textarea:focus, .form-select:focus {
+    border-color: var(--accent); box-shadow: 0 0 0 3px rgba(45,106,79,.12);
+  }
+  .form-textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+  .form-select { cursor: pointer; }
+
+  /* BUTTONS */
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all .2s; border: none; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #1e4d38; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(45,106,79,.3); }
+  .btn-secondary { background: var(--bg); color: var(--text); border: 1.5px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-orange { background: var(--accent2); color: white; }
+  .btn-orange:hover { background: #c85a3a; transform: translateY(-1px); }
+  .btn-blue { background: var(--accent3); color: white; }
+  .btn-blue:hover { background: #2e6080; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; transform: none !important; }
+  .btn-row { display: flex; gap: 12px; align-items: center; margin-top: 28px; justify-content: flex-end; }
+
+  /* GRANT CARDS */
+  .grant-card {
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius);
+    padding: 20px 22px; cursor: pointer; transition: all .2s; display: flex; gap: 16px; align-items: flex-start;
+  }
+  .grant-card:hover { border-color: var(--accent); box-shadow: 0 4px 20px rgba(45,106,79,.1); }
+  .grant-card.selected { border-color: var(--accent); background: #f0f7f3; }
+  .grant-card + .grant-card { margin-top: 12px; }
+  .grant-check { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--border); background: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; transition: all .2s; }
+  .grant-card.selected .grant-check { background: var(--accent); border-color: var(--accent); }
+  .grant-body { flex: 1; }
+  .grant-name { font-weight: 600; font-size: 15px; color: var(--text); margin-bottom: 3px; }
+  .grant-funder { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .grant-meta { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .grant-amount { font-family: 'Fraunces', serif; font-size: 20px; color: var(--gold); font-weight: 700; }
+  .grant-deadline { font-size: 12px; color: var(--muted); background: var(--bg); padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); }
+  .grant-badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+  .badge-closing { background: #fde8e8; color: var(--fail); border: 1px solid #f5c0c0; }
+  .badge-open { background: #e8f5ee; color: var(--pass); border: 1px solid #b8deca; }
+  .match-bar-wrap { margin-top: 10px; }
+  .match-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .match-score { color: var(--accent); font-weight: 700; }
+  .match-track { background: #e8e0d0; border-radius: 4px; height: 5px; overflow: hidden; }
+  .match-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 1s cubic-bezier(.4,0,.2,1); }
+
+  /* FILTER PILLS */
+  .pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .pill { padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border); background: var(--surface); color: var(--muted); transition: all .2s; }
+  .pill.active { border-color: var(--accent); color: var(--accent); background: #f0f7f3; }
+
+  /* PROPOSAL */
+  .proposal-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .prop-tab { padding: 7px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border); background: var(--surface); color: var(--muted); transition: all .2s; }
+  .prop-tab.active { border-color: var(--gold); color: var(--gold); background: #fdf5e6; }
+  .proposal-box {
+    background: #fffdf5; border: 1.5px solid var(--border); border-radius: var(--radius);
+    padding: 28px; min-height: 340px; font-family: 'Instrument Serif', serif; font-size: 16px;
+    line-height: 1.85; color: var(--text); white-space: pre-wrap; position: relative; overflow-y: auto; max-height: 420px;
+  }
+  .proposal-placeholder { color: #bbb; font-family: 'DM Sans', sans-serif; font-size: 14px; font-style: italic; }
+  .cursor { display: inline-block; width: 2px; height: 18px; background: var(--accent2); animation: blink 1s infinite; margin-left: 1px; vertical-align: middle; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .ai-thinking { display: flex; align-items: center; gap: 10px; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 13px; }
+  .dot-anim span { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin: 0 2px; animation: bounce .8s infinite; }
+  .dot-anim span:nth-child(2) { animation-delay: .15s; }
+  .dot-anim span:nth-child(3) { animation-delay: .3s; }
+  @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+
+  /* AUTOFILL */
+  .filled-input { border-color: var(--accent) !important; background: #f0f7f3 !important; }
+  .autofill-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--pass); background: #e8f5ee; border: 1px solid #b8deca; border-radius: 20px; padding: 4px 12px; font-weight: 600; }
+
+  /* COMPLIANCE */
+  .compliance-item {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px;
+    padding: 14px 18px; transition: all .4s ease; opacity: .25;
+  }
+  .compliance-item + .compliance-item { margin-top: 10px; }
+  .compliance-item.revealed { opacity: 1; }
+  .compliance-item.pass { border-color: #b8deca; }
+  .compliance-item.warn { border-color: #f0d898; }
+  .compliance-item.fail { border-color: #f5c0c0; }
+  .comp-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+  .comp-icon.pass { background: #e8f5ee; color: var(--pass); }
+  .comp-icon.warn { background: #fdf5e6; color: var(--warn); }
+  .comp-icon.fail { background: #fde8e8; color: var(--fail); }
+  .comp-text { font-size: 14px; color: var(--text); flex: 1; }
+  .comp-tag { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 10px; }
+  .comp-tag.pass { background: #e8f5ee; color: var(--pass); }
+  .comp-tag.warn { background: #fdf5e6; color: var(--warn); }
+  .comp-tag.fail { background: #fde8e8; color: var(--fail); }
+  .comp-summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+  .comp-stat { border-radius: 12px; padding: 16px 20px; text-align: center; }
+  .comp-stat.pass { background: #e8f5ee; border: 1px solid #b8deca; }
+  .comp-stat.warn { background: #fdf5e6; border: 1px solid #f0d898; }
+  .comp-stat.fail { background: #fde8e8; border: 1px solid #f5c0c0; }
+  .comp-stat-num { font-family: 'Fraunces', serif; font-size: 32px; font-weight: 700; }
+  .comp-stat-num.pass { color: var(--pass); }
+  .comp-stat-num.warn { color: var(--warn); }
+  .comp-stat-num.fail { color: var(--fail); }
+  .comp-stat-lbl { font-size: 12px; color: var(--muted); margin-top: 4px; font-weight: 600; }
+
+  /* DASHBOARD */
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .stat-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .stat-card-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .stat-card-value { font-family: 'Fraunces', serif; font-size: 32px; font-weight: 700; line-height: 1; }
+  .stat-card-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .stat-card.green .stat-card-value { color: var(--accent); }
+  .stat-card.gold .stat-card-value { color: var(--gold); }
+  .stat-card.blue .stat-card-value { color: var(--accent3); }
+  .stat-card.orange .stat-card-value { color: var(--accent2); }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .section-title { font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; font-weight: 600; }
+
+  .pipeline-row { margin-bottom: 16px; }
+  .pipeline-labels { display: flex; justify-content: space-between; font-size: 13px; color: var(--text); margin-bottom: 5px; }
+  .pipeline-count { font-weight: 700; }
+  .pipe-track { background: var(--bg); border-radius: 4px; height: 8px; overflow: hidden; border: 1px solid var(--border); }
+  .pipe-fill { height: 100%; border-radius: 4px; transition: width 1.2s cubic-bezier(.4,0,.2,1); }
+
+  .activity-item { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .activity-item:last-child { border-bottom: none; }
+  .activity-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .activity-body { flex: 1; }
+  .activity-action { font-size: 13px; font-weight: 600; }
+  .activity-grant { font-size: 13px; color: var(--muted); }
+  .activity-date { font-size: 11px; color: #b0a090; margin-top: 2px; }
+
+  /* SUCCESS BANNER */
+  .success-banner { background: linear-gradient(135deg, #f0f7f3, #fdf5e6); border: 1.5px solid #b8deca; border-radius: var(--radius); padding: 24px 28px; display: flex; align-items: center; justify-content: space-between; margin-top: 24px; }
+  .success-title { font-family: 'Fraunces', serif; font-size: 20px; color: var(--text); margin-bottom: 4px; }
+  .success-sub { font-size: 13px; color: var(--muted); }
+
+  /* PROGRESS STEPS */
+  .step-progress { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
+  .step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
+  .step-dot.done { background: var(--accent); }
+  .step-dot.active { background: var(--accent2); }
+
+  /* MISC */
+  .hint { font-size: 12px; color: var(--muted); margin-top: 6px; font-style: italic; }
+  .section-divider { border: none; border-top: 1.5px solid var(--border); margin: 28px 0; }
+  .tag { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
+
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 24px 20px; max-width: 100%; }
+    .form-grid, .stat-grid, .two-col, .comp-summary { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <div class="logo-icon">🌿</div>
+        <div>
+          <div class="logo-text">GrantFlow</div>
+          <div class="logo-sub">Grant Management</div>
+        </div>
+      </div>
+    </div>
+    <div id="nav-org" class="nav-item active" onclick="goTo('org')">
+      <div class="nav-icon">①</div>
+      <span>Org Profile</span>
+      <span class="nav-step">01</span>
+    </div>
+    <div id="nav-discover" class="nav-item" onclick="goTo('discover')">
+      <div class="nav-icon">②</div>
+      <span>Grant Discovery</span>
+      <span class="nav-step">02</span>
+    </div>
+    <div id="nav-proposal" class="nav-item" onclick="goTo('proposal')">
+      <div class="nav-icon">③</div>
+      <span>Proposal Generator</span>
+      <span class="nav-step">03</span>
+    </div>
+    <div id="nav-autofill" class="nav-item" onclick="goTo('autofill')">
+      <div class="nav-icon">④</div>
+      <span>Auto-fill Template</span>
+      <span class="nav-step">04</span>
+    </div>
+    <div id="nav-compliance" class="nav-item" onclick="goTo('compliance')">
+      <div class="nav-icon">⑤</div>
+      <span>Compliance Check</span>
+      <span class="nav-step">05</span>
+    </div>
+    <div id="nav-dashboard" class="nav-item" onclick="goTo('dashboard')">
+      <div class="nav-icon">⑥</div>
+      <span>Dashboard</span>
+      <span class="nav-step">06</span>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- ═══════════════════════════════════════
+         STEP 1 — ORG PROFILE
+    ═══════════════════════════════════════ -->
+    <div id="panel-org" class="panel active">
+      <div class="page-header">
+        <div class="page-tag">Step 1 of 6</div>
+        <div class="page-title">Organization Profile</div>
+        <div class="page-sub">Tell us about your organization once — we'll use this to power every grant application automatically.</div>
+      </div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Organization Name *</label>
+            <input id="org-name" class="form-input" placeholder="e.g. Greenleaf Community Foundation" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">EIN / Tax ID *</label>
+            <input id="org-ein" class="form-input" placeholder="XX-XXXXXXX" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Organization Type</label>
+            <select id="org-type" class="form-select">
+              <option value="">Select type...</option>
+              <option>501(c)(3) Nonprofit</option>
+              <option>501(c)(4) Social Welfare</option>
+              <option>Public Agency</option>
+              <option>Tribal Government</option>
+              <option>University / Academic</option>
+              <option>NGO / International</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Year Founded</label>
+            <input id="org-founded" class="form-input" placeholder="e.g. 2008" />
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Mission Statement *</label>
+            <textarea id="org-mission" class="form-textarea" placeholder="Describe your organization's mission and the communities you serve..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Primary Focus Areas *</label>
+            <input id="org-focus" class="form-input" placeholder="e.g. Environment, Education, Health" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Annual Budget (USD)</label>
+            <input id="org-budget" class="form-input" placeholder="e.g. 2,400,000" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">City, State</label>
+            <input id="org-location" class="form-input" placeholder="e.g. Austin, TX" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Website</label>
+            <input id="org-website" class="form-input" placeholder="https://yourorg.org" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Primary Contact Email</label>
+            <input id="org-email" class="form-input" placeholder="contact@yourorg.org" />
+          </div>
+          <div class="form-group full">
+            <label class="form-label">Key Programs & Services</label>
+            <textarea id="org-programs" class="form-textarea" placeholder="Describe your main programs, who benefits, and measurable outcomes you've achieved..."></textarea>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="fillSampleOrg()">✦ Fill Sample Data</button>
+          <button class="btn btn-primary" onclick="saveOrg()">Save Profile & Continue →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         STEP 2 — GRANT DISCOVERY
+    ═══════════════════════════════════════ -->
+    <div id="panel-discover" class="panel">
+      <div class="page-header">
+        <div class="page-tag">Step 2 of 6</div>
+        <div class="page-title">Grant Discovery</div>
+        <div class="page-sub">Grants matched to your organization profile. Select the ones you want to apply for.</div>
+      </div>
+
+      <div class="pills" id="filter-pills">
+        <div class="pill active" onclick="filterGrants('All', this)">All Grants</div>
+        <div class="pill" onclick="filterGrants('Environment', this)">🌿 Environment</div>
+        <div class="pill" onclick="filterGrants('Climate', this)">🌡 Climate</div>
+        <div class="pill" onclick="filterGrants('Education', this)">📚 Education</div>
+        <div class="pill" onclick="filterGrants('Health', this)">❤️ Health</div>
+        <div class="pill" onclick="filterGrants('Community', this)">🏘 Community</div>
+      </div>
+
+      <div id="grants-list"></div>
+
+      <div class="btn-row">
+        <span id="selected-count" style="color:var(--muted);font-size:13px;">0 grants selected</span>
+        <button class="btn btn-secondary" onclick="goTo('org')">← Back</button>
+        <button id="btn-to-proposal" class="btn btn-primary" onclick="goToProposal()" disabled>Generate Proposals →</button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         STEP 3 — PROPOSAL GENERATOR
+    ═══════════════════════════════════════ -->
+    <div id="panel-proposal" class="panel">
+      <div class="page-header">
+        <div class="page-tag">Step 3 of 6</div>
+        <div class="page-title">Proposal Generator</div>
+        <div class="page-sub">AI writes a tailored grant proposal for each grant using your organization's profile. Powered by Claude AI.</div>
+      </div>
+      <div class="card">
+        <div class="proposal-tabs" id="proposal-tabs"></div>
+        <div id="proposal-output" class="proposal-box">
+          <span class="proposal-placeholder">Select a grant tab above and click Generate to create your proposal.</span>
+        </div>
+        <div id="ai-status" style="margin-top:12px;min-height:30px;"></div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="goTo('discover')">← Back</button>
+          <button id="btn-generate" class="btn btn-orange" onclick="generateProposal()">✦ Generate with AI</button>
+          <button id="btn-to-autofill" class="btn btn-primary" onclick="goTo('autofill')" style="display:none">Continue to Auto-fill →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         STEP 4 — AUTO-FILL TEMPLATE
+    ═══════════════════════════════════════ -->
+    <div id="panel-autofill" class="panel">
+      <div class="page-header">
+        <div class="page-tag">Step 4 of 6</div>
+        <div class="page-title">Auto-fill Template</div>
+        <div class="page-sub">Standard grant application fields pre-populated from your profile. Review and edit as needed.</div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+          <div id="autofill-status" class="hint">Fields waiting to be filled...</div>
+          <button class="btn btn-blue" onclick="runAutofill()">⚡ Auto-fill All Fields</button>
+        </div>
+        <div class="form-grid" id="autofill-fields">
+          <div class="form-group">
+            <label class="form-label">Legal Organization Name</label>
+            <input id="af-org-name" class="form-input" placeholder="Will be filled from your profile" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">EIN / Federal Tax ID</label>
+            <input id="af-ein" class="form-input" placeholder="Will be filled from your profile" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Organization Type</label>
+            <input id="af-type" class="form-input" placeholder="Will be filled from your profile" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Year Established</label>
+            <input id="af-founded" class="form-input" placeholder="Will be filled from your profile" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Primary Contact Email</label>
+            <input id="af-email" class="form-input" placeholder="Will be filled from your profile" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Organization Address</label>
+            <input id="af-location" class="form-input" placeholder="Will be filled from your profile" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Project Title</label>
+            <input id="af-project-title" class="form-input" placeholder="Will be auto-generated" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Amount Requested</label>
+            <input id="af-amount" class="form-input" placeholder="Will be filled from grant data" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Project Period</label>
+            <input id="af-period" class="form-input" placeholder="e.g. Jan 1, 2026 – Dec 31, 2026" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Primary Focus Area</label>
+            <input id="af-focus" class="form-input" placeholder="Will be filled from your profile" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Website URL</label>
+            <input id="af-website" class="form-input" placeholder="Will be filled from your profile" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Annual Operating Budget</label>
+            <input id="af-budget" class="form-input" placeholder="Will be filled from your profile" />
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="goTo('proposal')">← Back</button>
+          <button class="btn btn-primary" onclick="goTo('compliance')">Run Compliance Check →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         STEP 5 — COMPLIANCE CHECKER
+    ═══════════════════════════════════════ -->
+    <div id="panel-compliance" class="panel">
+      <div class="page-header">
+        <div class="page-tag">Step 5 of 6</div>
+        <div class="page-title">Compliance Check</div>
+        <div class="page-sub">Automated scan of your application against grant requirements and regulations.</div>
+      </div>
+      <div class="card">
+        <div id="comp-summary-wrap" style="display:none">
+          <div class="comp-summary">
+            <div class="comp-stat pass"><div id="comp-pass-num" class="comp-stat-num pass">0</div><div class="comp-stat-lbl">✓ Passed</div></div>
+            <div class="comp-stat warn"><div id="comp-warn-num" class="comp-stat-num warn">0</div><div class="comp-stat-lbl">⚠ Warnings</div></div>
+            <div class="comp-stat fail"><div id="comp-fail-num" class="comp-stat-num fail">0</div><div class="comp-stat-lbl">✕ Failed</div></div>
+          </div>
+        </div>
+        <div id="compliance-list"></div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="goTo('autofill')">← Back</button>
+          <button id="btn-run-compliance" class="btn btn-blue" onclick="runCompliance()">▶ Run Compliance Scan</button>
+          <button id="btn-to-dashboard" class="btn btn-primary" onclick="goTo('dashboard')" style="display:none">View Dashboard →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         STEP 6 — DASHBOARD
+    ═══════════════════════════════════════ -->
+    <div id="panel-dashboard" class="panel">
+      <div class="page-header">
+        <div class="page-tag">Step 6 of 6</div>
+        <div class="page-title">Grant Dashboard</div>
+        <div class="page-sub">Your complete grant portfolio. Track applications, awards, and upcoming deadlines.</div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card green">
+          <div class="stat-card-label">Total Applied</div>
+          <div class="stat-card-value">12</div>
+          <div class="stat-card-sub">+3 this month</div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-card-label">Total Awarded</div>
+          <div class="stat-card-value">$1.2M</div>
+          <div class="stat-card-sub">4 grants active</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-card-label">Pending Review</div>
+          <div class="stat-card-value">5</div>
+          <div class="stat-card-sub">Avg. 47 day wait</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-card-label">Success Rate</div>
+          <div class="stat-card-value">67%</div>
+          <div class="stat-card-sub">Industry avg: 42%</div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="section-title">Application Pipeline</div>
+          <div class="pipeline-row">
+            <div class="pipeline-labels"><span>Drafting</span><span class="pipeline-count" style="color:var(--muted)">3</span></div>
+            <div class="pipe-track"><div class="pipe-fill" style="width:0%;background:#c4b5a0" data-width="30%"></div></div>
+          </div>
+          <div class="pipeline-row">
+            <div class="pipeline-labels"><span>Submitted</span><span class="pipeline-count" style="color:var(--accent3)">5</span></div>
+            <div class="pipe-track"><div class="pipe-fill" style="width:0%;background:var(--accent3)" data-width="50%"></div></div>
+          </div>
+          <div class="pipeline-row">
+            <div class="pipeline-labels"><span>Under Review</span><span class="pipeline-count" style="color:var(--gold)">2</span></div>
+            <div class="pipe-track"><div class="pipe-fill" style="width:0%;background:var(--gold)" data-width="20%"></div></div>
+          </div>
+          <div class="pipeline-row">
+            <div class="pipeline-labels"><span>Awarded</span><span class="pipeline-count" style="color:var(--accent)">4</span></div>
+            <div class="pipe-track"><div class="pipe-fill" style="width:0%;background:var(--accent)" data-width="40%"></div></div>
+          </div>
+          <div class="pipeline-row">
+            <div class="pipeline-labels"><span>Declined</span><span class="pipeline-count" style="color:var(--fail)">1</span></div>
+            <div class="pipe-track"><div class="pipe-fill" style="width:0%;background:var(--fail)" data-width="10%"></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">Recent Activity</div>
+          <div class="activity-item">
+            <div class="activity-dot" style="background:var(--accent3)"></div>
+            <div class="activity-body">
+              <div class="activity-action" style="color:var(--accent3)">Submitted</div>
+              <div class="activity-grant">Climate Resilience Fund — Bloomberg</div>
+              <div class="activity-date">Mar 4, 2026</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot" style="background:var(--accent)"></div>
+            <div class="activity-body">
+              <div class="activity-action" style="color:var(--accent)">Awarded 🎉</div>
+              <div class="activity-grant">USDA Rural Development — $150,000</div>
+              <div class="activity-date">Feb 28, 2026</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot" style="background:var(--fail)"></div>
+            <div class="activity-body">
+              <div class="activity-action" style="color:var(--fail)">Declined</div>
+              <div class="activity-grant">Tech Innovation Challenge</div>
+              <div class="activity-date">Feb 20, 2026</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot" style="background:var(--gold)"></div>
+            <div class="activity-body">
+              <div class="activity-action" style="color:var(--gold)">Under Review</div>
+              <div class="activity-grant">Health Equity Grant — RWJF</div>
+              <div class="activity-date">Feb 12, 2026</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot" style="background:var(--accent)"></div>
+            <div class="activity-body">
+              <div class="activity-action" style="color:var(--accent)">Awarded 🎉</div>
+              <div class="activity-grant">Community Innovation Award — $75,000</div>
+              <div class="activity-date">Jan 30, 2026</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="success-banner">
+        <div>
+          <div class="success-title">🌿 Application flow complete!</div>
+          <div class="success-sub">Your grant applications are ready to submit. Start a new cycle anytime.</div>
+        </div>
+        <button class="btn btn-primary" onclick="goTo('org')">+ Start New Application</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════
+const GRANTS = [
+  { id:1, name:"USDA Rural Development Grant", funder:"U.S. Dept. of Agriculture", amount:"$150,000", amountNum:150000, deadline:"Apr 30, 2026", match:97, category:"Environment", status:"open" },
+  { id:2, name:"Climate Resilience Fund", funder:"Bloomberg Philanthropies", amount:"$500,000", amountNum:500000, deadline:"May 15, 2026", match:94, category:"Climate", status:"open" },
+  { id:3, name:"Community Innovation Award", funder:"Kresge Foundation", amount:"$75,000", amountNum:75000, deadline:"Jun 1, 2026", match:89, category:"Community", status:"open" },
+  { id:4, name:"Education Equity Initiative", funder:"Bill & Melinda Gates Foundation", amount:"$250,000", amountNum:250000, deadline:"Mar 28, 2026", match:82, category:"Education", status:"closing" },
+  { id:5, name:"Health Equity Grant", funder:"Robert Wood Johnson Foundation", amount:"$180,000", amountNum:180000, deadline:"Jul 10, 2026", match:78, category:"Health", status:"open" },
+  { id:6, name:"Environmental Justice Fund", funder:"EPA Office of Grants", amount:"$300,000", amountNum:300000, deadline:"Aug 5, 2026", match:91, category:"Environment", status:"open" },
+  { id:7, name:"Youth Climate Leaders Program", funder:"Patagonia Foundation", amount:"$50,000", amountNum:50000, deadline:"Apr 15, 2026", match:85, category:"Climate", status:"open" },
+];
+
+const COMPLIANCE_RULES = [
+  { label:"Organization is a registered 501(c)(3) or eligible entity", sev:"pass" },
+  { label:"EIN / Federal Tax ID has been provided", sev:"pass" },
+  { label:"Mission statement aligns with grant focus area", sev:"pass" },
+  { label:"Budget narrative attached and complete", sev:"pass" },
+  { label:"IRS determination letter on file", sev:"pass" },
+  { label:"Board resolution signed within last 6 months", sev:"warn" },
+  { label:"Project timeline covers the full grant period", sev:"pass" },
+  { label:"Matching funds documentation missing", sev:"fail" },
+  { label:"DUNS / Unique Entity Identifier (UEI) provided", sev:"pass" },
+  { label:"Indirect cost rate agreement required", sev:"warn" },
+  { label:"Key personnel CVs attached", sev:"pass" },
+  { label:"Previous grant performance reports submitted", sev:"pass" },
+];
+
+// STATE
+let state = { org: {}, selectedGrants: [], activeGrantTab: null, proposals: {}, autofilled: false, complianceDone: false };
+let currentFilter = 'All';
+
+// ═══════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════
+function goTo(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  document.getElementById('nav-' + id).classList.add('active');
+  if (id === 'discover') renderGrants();
+  if (id === 'proposal') renderProposalTabs();
+  if (id === 'dashboard') animatePipeline();
+  window.scrollTo(0, 0);
+}
+
+// ═══════════════════════════════════════
+// STEP 1 — ORG PROFILE
+// ═══════════════════════════════════════
+function fillSampleOrg() {
+  document.getElementById('org-name').value = 'Greenleaf Community Foundation';
+  document.getElementById('org-ein').value = '47-1234567';
+  document.getElementById('org-type').value = '501(c)(3) Nonprofit';
+  document.getElementById('org-founded').value = '2008';
+  document.getElementById('org-mission').value = 'To strengthen underserved communities through environmental stewardship, equitable education, and grassroots health initiatives that create lasting, systemic change.';
+  document.getElementById('org-focus').value = 'Environment, Climate, Community Health';
+  document.getElementById('org-budget').value = '2,400,000';
+  document.getElementById('org-location').value = 'Austin, TX';
+  document.getElementById('org-website').value = 'https://greenleaf.org';
+  document.getElementById('org-email').value = 'grants@greenleaf.org';
+  document.getElementById('org-programs').value = 'Urban Reforestation Initiative (planted 12,000 trees, served 8 counties), Community Health Clinics (14,000 patients annually), Youth Environmental Education (2,200 students per year).';
+}
+
+function saveOrg() {
+  state.org = {
+    name: document.getElementById('org-name').value || 'Your Organization',
+    ein: document.getElementById('org-ein').value || 'XX-XXXXXXX',
+    type: document.getElementById('org-type').value || '501(c)(3) Nonprofit',
+    founded: document.getElementById('org-founded').value || '2010',
+    mission: document.getElementById('org-mission').value || 'To serve our community.',
+    focus: document.getElementById('org-focus').value || 'Community Development',
+    budget: document.getElementById('org-budget').value || '1,000,000',
+    location: document.getElementById('org-location').value || 'United States',
+    website: document.getElementById('org-website').value || 'https://yourorg.org',
+    email: document.getElementById('org-email').value || 'contact@yourorg.org',
+    programs: document.getElementById('org-programs').value || '',
+  };
+  document.getElementById('nav-org').classList.add('done');
+  goTo('discover');
+}
+
+// ═══════════════════════════════════════
+// STEP 2 — GRANT DISCOVERY
+// ═══════════════════════════════════════
+function renderGrants() {
+  const list = document.getElementById('grants-list');
+  const filtered = currentFilter === 'All' ? GRANTS : GRANTS.filter(g => g.category === currentFilter);
+  list.innerHTML = filtered.map(g => `
+    <div id="grant-${g.id}" class="grant-card ${state.selectedGrants.includes(g.id) ? 'selected' : ''}" onclick="toggleGrant(${g.id})">
+      <div class="grant-check">${state.selectedGrants.includes(g.id) ? '<span style="color:white;font-size:13px;font-weight:900">✓</span>' : ''}</div>
+      <div class="grant-body">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:3px">
+          <div class="grant-name">${g.name}</div>
+          <span class="grant-badge ${g.status === 'closing' ? 'badge-closing' : 'badge-open'}">${g.status === 'closing' ? 'CLOSING SOON' : 'OPEN'}</span>
+        </div>
+        <div class="grant-funder">${g.funder}</div>
+        <div class="grant-meta">
+          <span class="grant-amount">${g.amount}</span>
+          <span class="grant-deadline">📅 ${g.deadline}</span>
+          <span class="tag">${g.category}</span>
+        </div>
+        <div class="match-bar-wrap">
+          <div class="match-label"><span>AI Match Score</span><span class="match-score">${g.match}%</span></div>
+          <div class="match-track"><div id="bar-${g.id}" class="match-fill" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  setTimeout(() => filtered.forEach(g => {
+    const el = document.getElementById('bar-' + g.id);
+    if (el) el.style.width = g.match + '%';
+  }), 50);
+  updateSelectedCount();
+}
+
+function filterGrants(cat, el) {
+  currentFilter = cat;
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  renderGrants();
+}
+
+function toggleGrant(id) {
+  if (state.selectedGrants.includes(id)) {
+    state.selectedGrants = state.selectedGrants.filter(x => x !== id);
+  } else {
+    state.selectedGrants.push(id);
+  }
+  renderGrants();
+}
+
+function updateSelectedCount() {
+  const n = state.selectedGrants.length;
+  document.getElementById('selected-count').textContent = n + ' grant' + (n !== 1 ? 's' : '') + ' selected';
+  document.getElementById('btn-to-proposal').disabled = n === 0;
+}
+
+function goToProposal() {
+  document.getElementById('nav-discover').classList.add('done');
+  goTo('proposal');
+}
+
+// ═══════════════════════════════════════
+// STEP 3 — PROPOSAL GENERATOR
+// ═══════════════════════════════════════
+function renderProposalTabs() {
+  const tabs = document.getElementById('proposal-tabs');
+  if (!state.selectedGrants.length) { tabs.innerHTML = '<span style="color:var(--muted);font-size:13px">No grants selected — go back to Step 2.</span>'; return; }
+  tabs.innerHTML = state.selectedGrants.map(id => {
+    const g = GRANTS.find(x => x.id === id);
+    return `<div class="prop-tab ${state.activeGrantTab === id ? 'active' : ''}" onclick="selectGrantTab(${id})">${g.name.split(' ').slice(0,3).join(' ')}</div>`;
+  }).join('');
+  if (!state.activeGrantTab && state.selectedGrants.length) { state.activeGrantTab = state.selectedGrants[0]; renderProposalTabs(); }
+  const output = document.getElementById('proposal-output');
+  if (state.proposals[state.activeGrantTab]) {
+    output.textContent = state.proposals[state.activeGrantTab];
+    document.getElementById('btn-to-autofill').style.display = 'inline-flex';
+  } else {
+    output.innerHTML = '<span class="proposal-placeholder">Click "Generate with AI" to create your proposal for this grant.</span>';
+  }
+}
+
+function selectGrantTab(id) {
+  state.activeGrantTab = id;
+  renderProposalTabs();
+}
+
+async function generateProposal() {
+  if (!state.activeGrantTab) return;
+  const grant = GRANTS.find(g => g.id === state.activeGrantTab);
+  const org = state.org;
+  const btn = document.getElementById('btn-generate');
+  const output = document.getElementById('proposal-output');
+  const status = document.getElementById('ai-status');
+
+  btn.disabled = true;
+  btn.textContent = 'Generating...';
+  output.innerHTML = '<div class="ai-thinking">Generating proposal from Flask backend <div class="dot-anim"><span></span><span></span><span></span></div></div>';
+  status.innerHTML = '';
+
+  try {
+    const response = await fetch('/api/proposal', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ org, grant })
+    });
+
+    if (!response.ok) {
+      throw new Error('Proposal endpoint failed');
+    }
+
+    const payload = await response.json();
+    const fullText = payload.proposal || '';
+
+    let i = 0;
+    output.textContent = '';
+    const interval = setInterval(() => {
+      output.textContent = fullText.slice(0, i);
+      output.scrollTop = output.scrollHeight;
+      i += 6;
+      if (i >= fullText.length) {
+        clearInterval(interval);
+        state.proposals[state.activeGrantTab] = fullText;
+        document.getElementById('btn-to-autofill').style.display = 'inline-flex';
+        status.innerHTML = '<span style="color:var(--accent);font-size:13px;font-weight:600">✓ Proposal generated successfully</span>';
+      }
+    }, 12);
+  } catch(err) {
+    output.innerHTML = '<span class="proposal-placeholder">Unable to generate proposal right now. Please try again.</span>';
+    status.innerHTML = '<span style="color:var(--fail);font-size:13px;font-weight:600">✕ Generation failed</span>';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Regenerate';
+}
+
+// ═══════════════════════════════════════
+// STEP 4 — AUTO-FILL
+// ═══════════════════════════════════════
+function runAutofill() {
+  const org = state.org;
+  const grant = GRANTS.find(g => g.id === state.selectedGrants[0]) || GRANTS[0];
+  const fields = {
+    'af-org-name': org.name,
+    'af-ein': org.ein,
+    'af-type': org.type,
+    'af-founded': org.founded,
+    'af-email': org.email,
+    'af-location': org.location,
+    'af-project-title': `${(org.focus||'').split(',')[0].trim()} Impact Initiative 2026`,
+    'af-amount': grant.amount,
+    'af-period': 'Jan 1, 2026 – Dec 31, 2026',
+    'af-focus': org.focus,
+    'af-website': org.website,
+    'af-budget': '$' + (org.budget || '1,000,000'),
+  };
+  let delay = 0;
+  Object.entries(fields).forEach(([id, val]) => {
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el && val) { el.value = val; el.classList.add('filled-input'); }
+    }, delay);
+    delay += 80;
+  });
+  setTimeout(() => {
+    state.autofilled = true;
+    document.getElementById('autofill-status').innerHTML = '<span class="autofill-badge">⚡ 12 fields auto-filled from your profile</span>';
+    document.getElementById('nav-autofill').classList.add('done');
+  }, delay);
+}
+
+// ═══════════════════════════════════════
+// STEP 5 — COMPLIANCE
+// ═══════════════════════════════════════
+function buildComplianceList() {
+  document.getElementById('compliance-list').innerHTML = COMPLIANCE_RULES.map((r, i) => `
+    <div id="comp-item-${i}" class="compliance-item">
+      <div class="comp-icon ${r.sev}">${r.sev==='pass'?'✓':r.sev==='warn'?'⚠':'✕'}</div>
+      <div class="comp-text">${r.label}</div>
+      <span class="comp-tag ${r.sev}">${r.sev==='pass'?'PASS':r.sev==='warn'?'WARNING':'FAILED'}</span>
+    </div>
+  `).join('');
+}
+
+function runCompliance() {
+  buildComplianceList();
+  document.getElementById('btn-run-compliance').disabled = true;
+  document.getElementById('btn-run-compliance').textContent = 'Scanning...';
+  document.getElementById('comp-summary-wrap').style.display = 'none';
+
+  COMPLIANCE_RULES.forEach((_, i) => {
+    setTimeout(() => {
+      const el = document.getElementById('comp-item-' + i);
+      if (el) { el.classList.add('revealed', COMPLIANCE_RULES[i].sev); }
+      if (i === COMPLIANCE_RULES.length - 1) {
+        const pass = COMPLIANCE_RULES.filter(r=>r.sev==='pass').length;
+        const warn = COMPLIANCE_RULES.filter(r=>r.sev==='warn').length;
+        const fail = COMPLIANCE_RULES.filter(r=>r.sev==='fail').length;
+        document.getElementById('comp-pass-num').textContent = pass;
+        document.getElementById('comp-warn-num').textContent = warn;
+        document.getElementById('comp-fail-num').textContent = fail;
+        document.getElementById('comp-summary-wrap').style.display = 'block';
+        document.getElementById('btn-to-dashboard').style.display = 'inline-flex';
+        document.getElementById('btn-run-compliance').textContent = '↺ Re-scan';
+        document.getElementById('btn-run-compliance').disabled = false;
+        document.getElementById('nav-compliance').classList.add('done');
+      }
+    }, 200 + i * 280);
+  });
+}
+
+// ═══════════════════════════════════════
+// STEP 6 — DASHBOARD
+// ═══════════════════════════════════════
+function animatePipeline() {
+  setTimeout(() => {
+    document.querySelectorAll('.pipe-fill').forEach(el => {
+      el.style.width = el.dataset.width;
+    });
+    document.getElementById('nav-dashboard').classList.add('done');
+  }, 100);
+}
+
+// INIT
+buildComplianceList();
+renderGrants();
+</script>
+</body>
+</html>
